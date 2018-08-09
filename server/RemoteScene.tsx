@@ -51,7 +51,7 @@ export default class CreepsScene extends DCL.ScriptableScene
       try 
       {
         setState({
-          path: generateGrid(),
+          path: generatePath(),
           traps: [],
           creeps: [],
           score: {humanScore: 0, creepScore: 0},

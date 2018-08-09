@@ -6,14 +6,12 @@ import { IScoreBoardProps } from './components/ScoreBoard'
 import { ITrapProps} from './components/Trap'
 
 let state: {
-  grid: boolean[][], 
   path: Vector2Component[],
   creeps: ICreepProps[],
   traps: ITrapProps[],
   score: IScoreBoardProps,
   startButton: IButtonProps,
 } = {
-  grid: [], 
   path: [],
   creeps: [],
   traps: [],

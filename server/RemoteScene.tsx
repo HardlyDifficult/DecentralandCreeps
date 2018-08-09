@@ -20,7 +20,7 @@ export default class CreepsScene extends DCL.ScriptableScene
 {
   sceneDidMount() 
   {
-    if(getState().grid.length == 0)
+    if(getState().path.length == 0)
     {
       this.newGame();
     }
@@ -46,7 +46,23 @@ export default class CreepsScene extends DCL.ScriptableScene
 
   async newGame()
   {
-    this.initGridAndTraps();
+    while(true)
+    {
+      try 
+      {
+        setState({
+          path: generateGrid(),
+          traps: [],
+          creeps: [],
+          score: {humanScore: 0, creepScore: 0},
+        });
+        this.spawnTrap();
+        this.spawnTrap();
+  
+        break;
+      }
+      catch {}
+    }
     clearInterval(gameInterval);
     gameInterval = setInterval(() =>
     {
@@ -54,29 +70,6 @@ export default class CreepsScene extends DCL.ScriptableScene
     }, 3000 + Math.random() * 17000);
   }
   
-  initGridAndTraps()
-  {
-    while(true)
-    {
-      try 
-      {
-        const gridInfo = generateGrid();
-        setState({
-          grid: gridInfo.grid,
-          path: gridInfo.path,
-          traps: [],
-          creeps: [],
-          score: {humanScore: 0, creepScore: 0},
-        });
-        this.spawnTrap();
-        this.spawnTrap();
-
-        break;
-      }
-      catch {}
-    }
-  }
-
   spawnTrap()
   {
     let trap: ITrapProps = {
@@ -158,9 +151,9 @@ export default class CreepsScene extends DCL.ScriptableScene
       }
 
       const position = getRandomGridPosition();
-      if(getState().grid[position.x][position.y]
-        && !getState().grid[position.x - 1][position.y]
-        && !getState().grid[position.x + 1][position.y]
+      if(getState().path.find((p) => p.x == position.x && p.y == position.y)
+        && !getState().path.find((p) => p.x == position.x - 1 && p.y == position.y)
+        && !getState().path.find((p) => p.x == position.x + 1 && p.y == position.y)
         && position.y > 2
         && position.y < 18
         && position.x > 2
@@ -309,22 +302,14 @@ function getRandomGridPosition()
   return {x: Math.floor(Math.random() * 19), y: Math.floor(Math.random() * 19)};
 }
 
-function generateGrid(): {grid: boolean[][], path: Array<Vector2Component>}
+function generatePath(): Vector2Component[]
 {
-  const grid = Array(20);
-  for(let i = 0; i < grid.length; i++)
-  {
-    grid[i] = Array(20).fill(false);
-  }
-
-  const path = [];
+  const path: Vector2Component[] = [];
   let position = getStartPosition();
-  grid[position.x][position.y] = true;
   path.push(JSON.parse(JSON.stringify(position)));
   for(let i = 0; i < 2; i++)
   {
     position.y++;
-    grid[position.x][position.y] = true;
     path.push(JSON.parse(JSON.stringify(position)));
   }
 
@@ -348,22 +333,20 @@ function generateGrid(): {grid: boolean[][], path: Array<Vector2Component>}
         nextPosition.y += 1;
     }
     if(!isValidPosition(nextPosition) 
-      || grid[nextPosition.x][nextPosition.y]
-      || getNeighborCount(grid, nextPosition) > 1)
+      || path.find((p) => p.x == nextPosition.x && p.y == nextPosition.y)
+      || getNeighborCount(path, nextPosition) > 1)
     {
       continue;
     }
     position = nextPosition;
     path.push(JSON.parse(JSON.stringify(position)));
-    grid[position.x][position.y] = true;
   }
   position.y++;
-  grid[position.x][position.y] = true;
   path.push(JSON.parse(JSON.stringify(position)));
-  return {grid, path};
+  return path;
 }
 
-function getNeighborCount(grid: boolean[][], position: Vector2Component)
+function getNeighborCount(path: Vector2Component[], position: Vector2Component)
 {
   const neighbors: {x: number, y: number}[] = [
     {x: position.x + 1, y: position.y},
@@ -375,7 +358,7 @@ function getNeighborCount(grid: boolean[][], position: Vector2Component)
   let count = 0;
   for(const neighbor of neighbors)
   {
-    if(isValidPosition(neighbor) && grid[neighbor.x][neighbor.y])
+    if(isValidPosition(neighbor) && path.find((p) => p.x == position.x && p.y == position.y))
     {
       count++;
     }

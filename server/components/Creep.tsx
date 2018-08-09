@@ -2,14 +2,14 @@ import * as DCL from 'metaverse-api'
 import { Vector2Component } from 'metaverse-api';
 import { Helpers } from '../Helpers'
 
-export interface IEntityProps 
+export interface ICreepProps 
 {
   id: string,
   gridPosition: Vector2Component,
   isDead: boolean,
 }
 
-export const Entity = (props: IEntityProps) => 
+export const Creep = (props: ICreepProps) => 
 {
   return (
     <gltf-model

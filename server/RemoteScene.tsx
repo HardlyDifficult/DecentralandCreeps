@@ -1,25 +1,28 @@
 import * as DCL from 'metaverse-api'
 import { setState, getState } from './State'
 import { Vector2Component } from 'metaverse-api'
-import { Entity, IEntityProps } from './components/Entity'
+import { Button, ButtonState } from './components/Button'
+import { Creep, ICreepProps } from './components/Creep'
 import { ScoreBoard } from './components/ScoreBoard'
 import { Tile, ITileProps } from './components/Tile'
 import { Trap, ITrapProps, TrapState } from './components/Trap'
 import { Helpers } from './Helpers'
 
-let objectCounter = 0;
+function sleep(ms: number): Promise<void> 
+{
+  return new Promise(resolve => setTimeout(resolve, ms));
+} 
 
-export default class HouseScene extends DCL.ScriptableScene
+let objectCounter = 0;
+let gameInterval: NodeJS.Timer;
+
+export default class CreepsScene extends DCL.ScriptableScene
 {
   sceneDidMount() 
   {
     if(getState().grid.length == 0)
     {
-      this.initGridAndTraps();
-      setInterval(() =>
-      {
-        this.spawnEntity();
-      }, 3000 + Math.random() * 17000);
+      this.newGame();
     }
     else
     {
@@ -28,6 +31,27 @@ export default class HouseScene extends DCL.ScriptableScene
         this.subToTrap(trap);
       }
     }
+
+    this.eventSubscriber.on("newGame_click", async () =>
+    {
+      let startButton = getState().startButton;
+      startButton.state = ButtonState.Pressed;
+      setState({startButton});
+      await sleep(500);
+      this.newGame();
+      startButton.state = ButtonState.Normal;
+      setState({startButton});
+    });
+  }
+
+  async newGame()
+  {
+    this.initGridAndTraps();
+    clearInterval(gameInterval);
+    gameInterval = setInterval(() =>
+    {
+      this.spawnEntity();
+    }, 3000 + Math.random() * 17000);
   }
   
   initGridAndTraps()
@@ -41,7 +65,8 @@ export default class HouseScene extends DCL.ScriptableScene
           grid: gridInfo.grid,
           path: gridInfo.path,
           traps: [],
-          entities: [],
+          creeps: [],
+          score: {humanScore: 0, creepScore: 0},
         });
         this.spawnTrap();
         this.spawnTrap();
@@ -75,7 +100,7 @@ export default class HouseScene extends DCL.ScriptableScene
       setState({traps: getState().traps});
     });
 
-    this.eventSubscriber.on(trap.id + "LeverRight_click", () =>
+    this.eventSubscriber.on(trap.id + "LeverRight_click", async () =>
     {
       if(trap.trapState != TrapState.PreparedOne)
       {
@@ -84,44 +109,41 @@ export default class HouseScene extends DCL.ScriptableScene
       trap.trapState = TrapState.PreparedBoth;
       setState({traps: getState().traps});
 
-      setTimeout(() =>
+      await sleep(1000);
+      trap.trapState = TrapState.Fired;
+      setState({traps:  getState().traps});
+      let counter = 0;
+
+      while(true)
       {
-        trap.trapState = TrapState.Fired;
-        setState({traps:  getState().traps});
-        let counter = 0;
-
-        const interval = setInterval(() => 
+        await sleep(100);
+        
+        for(const entity of getState().creeps)
         {
-          for(const entity of getState().entities)
+          if(JSON.stringify(entity.gridPosition) == JSON.stringify(trap.gridPosition) && !entity.isDead)
           {
-            if(JSON.stringify(entity.gridPosition) == JSON.stringify(trap.gridPosition) && !entity.isDead)
-            {
-              this.kill(entity);
-              let score = getState().score;
-              score.humanScore++;
-              setState({score});
-            }
+            this.kill(entity);
+            let score = getState().score;
+            score.humanScore++;
+            setState({score});
           }
-          if(counter++ > 10)
-          {
-            clearInterval(interval);
-            trap.trapState = TrapState.NotAvailable;
-            setState({traps: getState().traps});
+        }
+        if(counter++ > 10)
+        {
+          trap.trapState = TrapState.NotAvailable;
+          setState({traps: getState().traps});
+          
+          await sleep(1000);
+          let traps = getState().traps.slice();
+          traps.splice(traps.indexOf(trap), 1)
+          setState({traps});
+          
+          await sleep(1000);
+          this.spawnTrap(); 
 
-            setTimeout(() =>
-            {
-              let traps = getState().traps.slice();
-              traps.splice(traps.indexOf(trap), 1)
-              setState({traps});
-
-              setTimeout(() =>
-              {
-                this.spawnTrap(); 
-              }, 1000);
-            }, 1000);
-          }
-        }, 100);
-      }, 1000);
+          break;
+        }
+      };
     });
   }
 
@@ -150,9 +172,9 @@ export default class HouseScene extends DCL.ScriptableScene
     } 
   }
 
-  spawnEntity()
+  async spawnEntity()
   {
-    for(const e of getState().entities)
+    for(const e of getState().creeps)
     {
       if(JSON.stringify(e.gridPosition) == JSON.stringify(getStartPosition()))
       {
@@ -160,56 +182,55 @@ export default class HouseScene extends DCL.ScriptableScene
       }
     }
 
-    let entity: IEntityProps = {
-      id: "Entity" + objectCounter++,
+    let creep: ICreepProps = {
+      id: "Creep" + objectCounter++,
       gridPosition: getStartPosition(),
       isDead: false,
     };
-    setState({entities: [...getState().entities, entity]});
+    setState({creeps: [...getState().creeps, creep]});
 
     let pathIndex = 1;
-    const interval = setInterval(() =>
+    while(true)
     {
-      if(entity.isDead)
+      if(creep.isDead)
       {
-        clearInterval(interval);
         return;
       }
 
       if(pathIndex >= getState().path.length)
       {
         let score = getState().score;
-        score.blobScore++;
+        score.creepScore++;
         setState({score});
-        this.kill(entity);
+        this.kill(creep);
       }
       else
       {
-        entity.gridPosition = getState().path[pathIndex];
+        creep.gridPosition = getState().path[pathIndex];
         pathIndex++;        
-        setState({entities: getState().entities});
+        setState({creeps: getState().creeps});
       }
-    }, 2000); 
+
+      await sleep(2000);
+    }
   }
 
-  kill(entity: IEntityProps)
+  async kill(creep: ICreepProps)
   {
-    entity.isDead = true;
-    setState({entities: getState().entities});
+    creep.isDead = true;
+    setState({creeps: getState().creeps});
 
-    setTimeout(() => 
-    {
-      let entities = getState().entities.slice();
-      entities.splice(entities.indexOf(entity), 1);
-      setState({entities: entities});
-    }, 2000);
+    await sleep(2000);
+    let creeps = getState().creeps.slice();
+    creeps.splice(creeps.indexOf(creep), 1);
+    setState({creeps});
   }
 
   renderEntities()
   {
-    return getState().entities.map((entity) =>
+    return getState().creeps.map((creep) =>
     {
-      return Entity(entity);
+      return Creep(creep);
     });
   }
 
@@ -258,6 +279,7 @@ export default class HouseScene extends DCL.ScriptableScene
           scale={{x: 1, y: 1, z: 1.5}}
         />
 
+        {Button(getState().startButton)}
         {this.renderTiles()}
         {this.renderTraps()}
         {this.renderEntities()}

@@ -7,3 +7,4 @@ tslint.json
 node_modules/
 dist/
 /scene.js
+/server/build

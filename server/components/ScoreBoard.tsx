@@ -3,7 +3,7 @@ import * as DCL from 'metaverse-api'
 export interface IScoreBoardProps 
 {
   humanScore: number,
-  blobScore: number,
+  creepScore: number,
 }
 
 export const ScoreBoard = (props: IScoreBoardProps) => 
@@ -19,7 +19,7 @@ export const ScoreBoard = (props: IScoreBoardProps) =>
         value={props.humanScore.toString()}
         position={{x: -.4, y: .35, z: -.36}}
         fontSize={200}
-        color={props.humanScore > props.blobScore ? "#22ff22" : "#ffffff"}
+        color={props.humanScore > props.creepScore ? "#22ff22" : "#ffffff"}
       />
       <text 
         value="humans"
@@ -32,13 +32,13 @@ export const ScoreBoard = (props: IScoreBoardProps) =>
         fontSize={100}
       />
       <text 
-        value={props.blobScore.toString()}
+        value={props.creepScore.toString()}
         position={{x: .4, y: .35, z: -.36}}
         fontSize={200}
-        color={props.blobScore > props.humanScore ? "#ff2222" : "#ffffff"}
+        color={props.creepScore > props.humanScore ? "#ff2222" : "#ffffff"}
       />
       <text 
-        value="blobs"
+        value="creeps"
         position={{x: .4, y: .1, z: -.36}}
         fontSize={50}
       />

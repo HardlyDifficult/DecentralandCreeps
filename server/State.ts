@@ -1,21 +1,29 @@
 import { updateAll } from './ConnectedClients'
 import { Vector2Component } from 'metaverse-api'
-import { IEntityProps } from './components/Entity'
+import { IButtonProps, ButtonState } from './components/Button'
+import { ICreepProps } from './components/Creep'
 import { IScoreBoardProps } from './components/ScoreBoard'
 import { ITrapProps} from './components/Trap'
 
 let state: {
   grid: boolean[][], 
   path: Vector2Component[],
-  entities: IEntityProps[],
+  creeps: ICreepProps[],
   traps: ITrapProps[],
   score: IScoreBoardProps,
+  startButton: IButtonProps,
 } = {
   grid: [], 
   path: [],
-  entities: [],
+  creeps: [],
   traps: [],
-  score: {humanScore: 0, blobScore: 0},
+  score: {humanScore: 0, creepScore: 0},
+  startButton: {
+    id: "newGame",
+    position: {x: 18.65, y: .7, z: 18.75},
+    state: ButtonState.Normal,
+    label: "New Game",
+  }
 };
 
 export function getState(): typeof state 

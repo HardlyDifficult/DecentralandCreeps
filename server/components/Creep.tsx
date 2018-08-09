@@ -1,6 +1,5 @@
 import * as DCL from 'metaverse-api'
 import { Vector2Component } from 'metaverse-api';
-import { Helpers } from '../Helpers'
 
 export interface ICreepProps 
 {
@@ -15,8 +14,8 @@ export const Creep = (props: ICreepProps) =>
     <gltf-model
       id={props.id}
       src="../assets/BlobMonster/BlobMonster.gltf" 
-      position={Helpers.plusVector3(Helpers.gridToWorld(props.gridPosition), {x: 0, y: .1, z: 0})}
-      lookAt={Helpers.gridToWorld(props.gridPosition)}
+      position={{x: props.gridPosition.x, y: .1, z: props.gridPosition.y}}
+      lookAt={{x: props.gridPosition.x, y: 0, z: props.gridPosition.y}}
       skeletalAnimation={[
         {
           clip: "Walking",

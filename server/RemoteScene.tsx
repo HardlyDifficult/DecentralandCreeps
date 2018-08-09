@@ -6,7 +6,6 @@ import { Creep, ICreepProps } from './components/Creep'
 import { ScoreBoard } from './components/ScoreBoard'
 import { Tile, ITileProps } from './components/Tile'
 import { Trap, ITrapProps, TrapState } from './components/Trap'
-import { Helpers } from './Helpers'
 
 function sleep(ms: number): Promise<void> 
 {
@@ -248,6 +247,7 @@ export default class CreepsScene extends DCL.ScriptableScene
   
   async render() 
   {
+    const endOfPath = getState().path[getState().path.length - 2];
     return (
       <scene>
         <material
@@ -268,7 +268,7 @@ export default class CreepsScene extends DCL.ScriptableScene
         />
         <gltf-model
           src="assets/Archway/StoneArchway.gltf"
-          position={Helpers.gridToWorld(getState().path[getState().path.length - 2])}
+          position={{x: endOfPath.x, y: 0, z: endOfPath.y}}
           scale={{x: 1, y: 1, z: 1.5}}
         />
 
@@ -358,7 +358,7 @@ function getNeighborCount(path: Vector2Component[], position: Vector2Component)
   let count = 0;
   for(const neighbor of neighbors)
   {
-    if(isValidPosition(neighbor) && path.find((p) => p.x == position.x && p.y == position.y))
+    if(path.find((p) => p.x == neighbor.x && p.y == neighbor.y))
     {
       count++;
     }

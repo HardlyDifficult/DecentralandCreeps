@@ -1,6 +1,5 @@
 import * as DCL from 'metaverse-api'
 import { Vector2Component } from 'metaverse-api';
-import { Helpers } from '../Helpers'
 
 export const enum TrapState 
 {
@@ -25,7 +24,7 @@ export const Trap = (props: ITrapProps) =>
       <gltf-model
         src="../assets/Lever/LeverBlue.gltf"
         id={props.id + "LeverLeft"}
-        position={Helpers.gridToWorld(Helpers.plusVector2(props.gridPosition, {x: -1, y: 0}))}
+        position={{x: props.gridPosition.x - 1, y: 0, z: props.gridPosition.y}}
         scale={.5}
         rotation={{x: 0, y: 90, z: 0}}
         skeletalAnimation={[
@@ -46,7 +45,7 @@ export const Trap = (props: ITrapProps) =>
       <gltf-model
         id={props.id}
         src="../assets/SpikeTrap/SpikeTrap.gltf"
-        position={Helpers.gridToWorld(props.gridPosition)}
+        position={{x: props.gridPosition.x, y: 0, z: props.gridPosition.y}}
         skeletalAnimation={[
           {
             clip:"SpikeUp", 
@@ -62,7 +61,7 @@ export const Trap = (props: ITrapProps) =>
       <gltf-model
         id={props.id + "LeverRight"}
         src="../assets/Lever/LeverRed.gltf"
-        position={Helpers.gridToWorld(Helpers.plusVector2(props.gridPosition, {x: 1, y: 0}))}
+        position={{x: props.gridPosition.x + 1, y: 0, z: props.gridPosition.y}}
         scale={.5}
         rotation={{x: 0, y: 90, z: 0}}
         skeletalAnimation={[

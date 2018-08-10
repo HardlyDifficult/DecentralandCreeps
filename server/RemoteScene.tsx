@@ -44,6 +44,11 @@ export default class CreepsScene extends DCL.ScriptableScene
 
   newGame()
   {
+    for(let creep of getState().creeps)
+    {
+      creep.isDead = true;
+    }
+
     while(true)
     {
       try 

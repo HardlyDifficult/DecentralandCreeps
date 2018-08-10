@@ -70,9 +70,9 @@ export default class CreepsScene extends DCL.ScriptableScene
 
   async spawnEntity()
   {
-    for(const e of getState().creeps)
+    for(const creep of getState().creeps)
     {
-      if(JSON.stringify(e.gridPosition) == JSON.stringify(getStartPosition()))
+      if(JSON.stringify(creep.gridPosition) == JSON.stringify(getStartPosition()))
       {
         return;
       }
@@ -255,6 +255,8 @@ export default class CreepsScene extends DCL.ScriptableScene
           id="floorTileMaterial"
           albedoTexture="./assets/StoneFloor.png"
         />
+        {this.renderTiles()}
+
         <plane
           position={{x: 10, y: 0, z: 10}}
           rotation={{x: 90, y: 0, z: 0}}
@@ -273,7 +275,6 @@ export default class CreepsScene extends DCL.ScriptableScene
           scale={{x: 1, y: 1, z: 1.5}}
         />
 
-        {this.renderTiles()}
         {this.renderCreeps()}
         {this.renderTraps()}
         {ScoreBoard(getState().score)}

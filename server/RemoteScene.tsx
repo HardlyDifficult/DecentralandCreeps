@@ -69,11 +69,11 @@ export default class CreepsScene extends DCL.ScriptableScene
     clearInterval(spawnInterval);
     spawnInterval = setInterval(() =>
     {
-      this.spawnEntity();
+      this.spawnCreep();
     }, 3000 + Math.random() * 17000);
   }
 
-  async spawnEntity()
+  async spawnCreep()
   {
     for(const creep of getState().creeps)
     {

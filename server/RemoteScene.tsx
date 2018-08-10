@@ -1,19 +1,18 @@
 import * as DCL from 'metaverse-api'
 import { setState, getState } from './State'
 import { Vector2Component } from 'metaverse-api'
-import { Button, ButtonState } from './components/Button'
-import { Creep, ICreepProps } from './components/Creep'
-import { ScoreBoard } from './components/ScoreBoard'
 import { Tile, ITileProps } from './components/Tile'
 import { Trap, ITrapProps, TrapState } from './components/Trap'
+import { Creep, ICreepProps } from './components/Creep'
+import { ScoreBoard } from './components/ScoreBoard'
+import { Button, ButtonState } from './components/Button'
 
 function sleep(ms: number): Promise<void> 
 {
   return new Promise(resolve => setTimeout(resolve, ms));
 } 
-
+let spawnInterval: NodeJS.Timer;
 let objectCounter = 0;
-let gameInterval: NodeJS.Timer;
 
 export default class CreepsScene extends DCL.ScriptableScene
 {
@@ -43,7 +42,7 @@ export default class CreepsScene extends DCL.ScriptableScene
     });
   }
 
-  async newGame()
+  newGame()
   {
     while(true)
     {
@@ -51,8 +50,8 @@ export default class CreepsScene extends DCL.ScriptableScene
       {
         setState({
           path: generatePath(),
-          traps: [],
           creeps: [],
+          traps: [],
           score: {humanScore: 0, creepScore: 0},
         });
         this.spawnTrap();
@@ -62,11 +61,66 @@ export default class CreepsScene extends DCL.ScriptableScene
       }
       catch {}
     }
-    clearInterval(gameInterval);
-    gameInterval = setInterval(() =>
+    clearInterval(spawnInterval);
+    spawnInterval = setInterval(() =>
     {
       this.spawnEntity();
     }, 3000 + Math.random() * 17000);
+  }
+
+  async spawnEntity()
+  {
+    for(const e of getState().creeps)
+    {
+      if(JSON.stringify(e.gridPosition) == JSON.stringify(getStartPosition()))
+      {
+        return;
+      }
+    }
+
+    let creep: ICreepProps = {
+      id: "Creep" + objectCounter++,
+      gridPosition: getStartPosition(),
+      isDead: false,
+    };
+    setState({creeps: [...getState().creeps, creep]});
+
+    let pathIndex = 1;
+    while(true)
+    {
+      if(creep.isDead)
+      {
+        return;
+      }
+
+      if(pathIndex >= getState().path.length)
+      {
+        this.kill(creep);
+
+        let score = getState().score;
+        score.creepScore++;
+        setState({score});
+      }
+      else
+      {
+        creep.gridPosition = getState().path[pathIndex];
+        pathIndex++;        
+        setState({creeps: getState().creeps});
+      }
+
+      await sleep(2000);
+    }
+  }
+
+  async kill(creep: ICreepProps)
+  {
+    creep.isDead = true;
+    setState({creeps: getState().creeps});
+
+    await sleep(2000);
+    let creeps = getState().creeps.slice();
+    creeps.splice(creeps.indexOf(creep), 1);
+    setState({creeps});
   }
   
   spawnTrap()
@@ -115,6 +169,7 @@ export default class CreepsScene extends DCL.ScriptableScene
           if(JSON.stringify(entity.gridPosition) == JSON.stringify(trap.gridPosition) && !entity.isDead)
           {
             this.kill(entity);
+
             let score = getState().score;
             score.humanScore++;
             setState({score});
@@ -149,7 +204,7 @@ export default class CreepsScene extends DCL.ScriptableScene
         throw new Error("Invalid path, try again");
       }
 
-      const position = getRandomGridPosition();
+      const position = {x: Math.floor(Math.random() * 19), y: Math.floor(Math.random() * 19)};
       if(getState().path.find((p) => p.x == position.x && p.y == position.y)
         && !getState().path.find((p) => p.x == position.x - 1 && p.y == position.y)
         && !getState().path.find((p) => p.x == position.x + 1 && p.y == position.y)
@@ -164,68 +219,6 @@ export default class CreepsScene extends DCL.ScriptableScene
     } 
   }
 
-  async spawnEntity()
-  {
-    for(const e of getState().creeps)
-    {
-      if(JSON.stringify(e.gridPosition) == JSON.stringify(getStartPosition()))
-      {
-        return;
-      }
-    }
-
-    let creep: ICreepProps = {
-      id: "Creep" + objectCounter++,
-      gridPosition: getStartPosition(),
-      isDead: false,
-    };
-    setState({creeps: [...getState().creeps, creep]});
-
-    let pathIndex = 1;
-    while(true)
-    {
-      if(creep.isDead)
-      {
-        return;
-      }
-
-      if(pathIndex >= getState().path.length)
-      {
-        let score = getState().score;
-        score.creepScore++;
-        setState({score});
-        this.kill(creep);
-      }
-      else
-      {
-        creep.gridPosition = getState().path[pathIndex];
-        pathIndex++;        
-        setState({creeps: getState().creeps});
-      }
-
-      await sleep(2000);
-    }
-  }
-
-  async kill(creep: ICreepProps)
-  {
-    creep.isDead = true;
-    setState({creeps: getState().creeps});
-
-    await sleep(2000);
-    let creeps = getState().creeps.slice();
-    creeps.splice(creeps.indexOf(creep), 1);
-    setState({creeps});
-  }
-
-  renderEntities()
-  {
-    return getState().creeps.map((creep) =>
-    {
-      return Creep(creep);
-    });
-  }
-
   renderTiles()
   {
     return getState().path.map((gridPosition) =>
@@ -234,6 +227,14 @@ export default class CreepsScene extends DCL.ScriptableScene
         gridPosition
       };
       return Tile(tileProps);
+    });
+  }
+
+  renderCreeps()
+  {
+    return getState().creeps.map((creep) =>
+    {
+      return Creep(creep);
     });
   }
 
@@ -272,11 +273,11 @@ export default class CreepsScene extends DCL.ScriptableScene
           scale={{x: 1, y: 1, z: 1.5}}
         />
 
-        {Button(getState().startButton)}
         {this.renderTiles()}
+        {this.renderCreeps()}
         {this.renderTraps()}
-        {this.renderEntities()}
         {ScoreBoard(getState().score)}
+        {Button(getState().startButton)}
       </scene>
     )
   }
@@ -295,11 +296,6 @@ function isValidPosition(position: Vector2Component)
     && position.y < 19
     && (position.x < 18 || position.y < 18)
     && (position.x > 1 || position.y > 1);
-}
-
-function getRandomGridPosition()
-{
-  return {x: Math.floor(Math.random() * 19), y: Math.floor(Math.random() * 19)};
 }
 
 function generatePath(): Vector2Component[]

@@ -1,9 +1,9 @@
 import { updateAll } from './ConnectedClients'
 import { Vector2Component } from 'metaverse-api'
-import { IButtonProps, ButtonState } from './components/Button'
 import { ICreepProps } from './components/Creep'
-import { IScoreBoardProps } from './components/ScoreBoard'
 import { ITrapProps} from './components/Trap'
+import { IScoreBoardProps } from './components/ScoreBoard'
+import { IButtonProps, ButtonState } from './components/Button'
 
 let state: {
   path: Vector2Component[],

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "My new Decentraland project",
   "scripts": {
-    "build": "metaverse-compiler build.json --watch",
+    "build": "metaverse-compiler build.json",
+    "watch": "metaverse-compiler build.json --watch",
     "start": "nodemon build/index.js"
   },
   "author": "",

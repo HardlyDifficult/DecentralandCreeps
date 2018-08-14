@@ -1,0 +1,27 @@
+{
+  "name": "dcl-project",
+  "version": "1.0.0",
+  "description": "My new Decentraland project",
+  "scripts": {
+    "build": "metaverse-compiler build.json --watch",
+    "start": "nodemon build/index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/cors": "^2.8.3",
+    "@types/express": "^4.11.1",
+    "@types/node": "^8.9.4",
+    "@types/ws": "^4.0.1",
+    "cors": "^2.8.4",
+    "express": "^4.16.2",
+    "metaverse-api": "rc",
+    "nodemon": "^1.18.3",
+    "traceur": "0.0.111",
+    "ws": "^4.0.0"
+  },
+  "dependencies": {
+    "babylonjs": "^3.2.0",
+    "cannon": "^0.6.2"
+  }
+}

@@ -1,6 +1,8 @@
-# Decentraland BlockDog
+# Decentraland Tower Defense Game
 
-This is a puppy in Decentraland which will follow you around and listen to most of your commands.
+This is a simple tower defense game for Decentraland.
+
+The game generates a random path and places traps in random locations along that path. Then enemy entities are spawn and follow this path, unless you activate the traps to stop them. The game supports multiple players, has a scoreboard and has a reset button to restart the game at any time.
 
 ## Getting Started
 
